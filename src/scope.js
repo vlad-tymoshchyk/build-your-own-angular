@@ -1,3 +1,5 @@
+const {isEqual, cloneDeep} = require('lodash');
+
 function Scope() {
   this.$$watchers = [];
   this.$$lastDirtyWatch = null;
@@ -5,8 +7,9 @@ function Scope() {
 
 function initWatchVal() {}
 
-Scope.prototype.$watch = function(watchFn, listenerFn) {
+Scope.prototype.$watch = function(watchFn, listenerFn, valueEq = false) {
   this.$$watchers.push({
+    valueEq,
     watchFn,
     listenerFn: listenerFn || (() => {}),
     last: initWatchVal,
@@ -25,17 +28,21 @@ Scope.prototype.$digest = function() {
   } while (dirty && TTP);
 };
 
+Scope.prototype.$$areEqual = function(newVal, oldVal, valueEq) {
+  return valueEq ? isEqual(newVal, oldVal) : newVal === oldVal;
+};
+
 Scope.prototype.$$digestOnce = function() {
   let dirty = false;
-  let str = '';
   for (let i = 0, len = this.$$watchers.length; i < len; i++) {
     const watcher = this.$$watchers[i];
+    console.log('watcher:', watcher);
     const newVal = watcher.watchFn(this);
     const oldVal = watcher.last;
 
-    if (newVal !== oldVal) {
+    if (this.$$areEqual(newVal, oldVal, watcher.valueEq)) {
       this.$$lastDirtyWatch = watcher;
-      watcher.last = newVal;
+      watcher.last = watcher.valueEq ? cloneDeep(newVal) : newVal;
       watcher.listenerFn(
         newVal,
         oldVal !== initWatchVal ? oldVal : newVal,
