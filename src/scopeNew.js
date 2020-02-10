@@ -1,19 +1,18 @@
-const {isEqual} = require('lodash');
+const { isEqual } = require("lodash");
 
 function Scope() {
   this.$$watchers = [];
 }
 
-function initWatchVal () {};
+function initWatchVal() {}
 
 Scope.prototype.$watch = function(watchFn, listenFn) {
   this.$$watchers.push({
     watchFn,
     listenFn,
-    last: initWatchVal,
+    last: initWatchVal
   });
 };
-
 
 Scope.prototype.$digest = function() {
   for (let i = 0, len = this.$$watchers.length; i < len; i++) {
@@ -26,7 +25,7 @@ Scope.prototype.$digest = function() {
   }
 };
 
-Scope.prototype.$$areEqual = function(newVal, oldVal, valueEq) { 
+Scope.prototype.$$areEqual = function(newVal, oldVal, valueEq) {
   return valueEq ? isEqual(newVal, oldVal) : newVal === oldVal;
 };
 

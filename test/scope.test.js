@@ -1,20 +1,20 @@
-const Scope = require('../src/scope');
+const Scope = require("../src/scope");
 
-describe('Scope', () => {
-  it('it can be constructed and used as an object', () => {
+describe("Scope", () => {
+  it("it can be constructed and used as an object", () => {
     const scope = new Scope();
     scope.aProperty = 1;
     expect(scope.aProperty).toBe(1);
   });
 
-  describe('digest', () => {
+  describe("digest", () => {
     let scope;
 
     beforeEach(() => {
       scope = new Scope();
     });
 
-    it('calls the listener function on first $digest', () => {
+    it("calls the listener function on first $digest", () => {
       const watchFn = jest.fn();
       const listenerFn = jest.fn();
       scope.$watch(watchFn, listenerFn);
@@ -23,28 +23,28 @@ describe('Scope', () => {
       expect(watchFn).toHaveBeenCalledWith(scope);
     });
 
-    it('calls listener when watch value is first undefined', () => {
+    it("calls listener when watch value is first undefined", () => {
       scope.counter = 0;
 
       scope.$watch(
         scope => scope.undefVal,
         (newVal, oldVal, scope) => {
           scope.counter++;
-        },
+        }
       );
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
 
-    it('calls the listener function when the scope value changes', () => {
-      scope.someVal = 'a';
+    it("calls the listener function when the scope value changes", () => {
+      scope.someVal = "a";
       scope.counter = 0;
 
       scope.$watch(
         scope => scope.someVal,
         (newVal, oldVal, scope) => {
           scope.counter++;
-        },
+        }
       );
 
       expect(scope.counter).toBe(0);
@@ -55,38 +55,38 @@ describe('Scope', () => {
       scope.$digest();
       expect(scope.counter).toBe(1);
 
-      scope.someVal = 'b';
+      scope.someVal = "b";
       expect(scope.counter).toBe(1);
 
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
 
-    it('calls listener with new value as old value for first time', () => {
+    it("calls listener with new value as old value for first time", () => {
       const listener = jest.fn();
-      const testVal = 'a';
+      const testVal = "a";
       scope.aProperty = testVal;
       scope.$watch(scope => scope.aProperty, listener);
       scope.$digest();
       expect(listener).toHaveBeenCalledWith(testVal, testVal, scope);
     });
 
-    it('may have watchers that omit the listener function', () => {
-      const watcher = jest.fn(() => 'something');
+    it("may have watchers that omit the listener function", () => {
+      const watcher = jest.fn(() => "something");
       scope.$watch(watcher);
       scope.$digest();
       expect(watcher).toHaveBeenCalled();
     });
 
-    it('triggers chained watchers in the same digest', () => {
-      scope.name = 'Jane';
+    it("triggers chained watchers in the same digest", () => {
+      scope.name = "Jane";
       scope.$watch(
         scope => scope.nameUpper,
         (newVal, oldVal, scope) => {
           if (newVal) {
-            scope.initial = newVal.substring(0, 1) + '.';
+            scope.initial = newVal.substring(0, 1) + ".";
           }
-        },
+        }
       );
       scope.$watch(
         scope => scope.name,
@@ -94,13 +94,13 @@ describe('Scope', () => {
           if (newVal) {
             scope.nameUpper = newVal.toUpperCase();
           }
-        },
+        }
       );
       scope.$digest();
-      expect(scope.initial).toBe('J.');
+      expect(scope.initial).toBe("J.");
     });
 
-    it('gives up on the watches after 10 iterations', () => {
+    it("gives up on the watches after 10 iterations", () => {
       scope.counterA = 0;
       scope.counterB = 0;
 
@@ -108,20 +108,20 @@ describe('Scope', () => {
         scope => scope.counterA,
         (newVal, oldVal, scope) => {
           scope.counterB++;
-        },
+        }
       );
 
       scope.$watch(
         scope => scope.counterB,
         (newVal, oldVal, scope) => {
           scope.counterA++;
-        },
+        }
       );
 
       expect(() => scope.$digest()).toThrow();
     });
 
-    it('ends the digest when the last watch is clean', () => {
+    it("ends the digest when the last watch is clean", () => {
       scope.array = [];
       for (let i = 0; i < 10; i++) scope.array.push(i);
       let watchExecutions = 0;
@@ -142,8 +142,8 @@ describe('Scope', () => {
       expect(watchExecutions).toBe(34);
     });
 
-    it('does not end digest so that new watches are not run', () => {
-      scope.aValue = 'abc';
+    it("does not end digest so that new watches are not run", () => {
+      scope.aValue = "abc";
       scope.counter = 0;
 
       const listenerFn = jest.fn();
@@ -152,14 +152,14 @@ describe('Scope', () => {
         scope => scope.aValue,
         (newVal, oldVal, scope) => {
           scope.$watch(scope => scope.aValue, listenerFn);
-        },
+        }
       );
 
       scope.$digest();
       expect(listenerFn).toHaveBeenCalled();
     });
 
-    it('compares based on value if enabled', () => {
+    it("compares based on value if enabled", () => {
       scope.aValue = [1, 2, 3];
       const listener = jest.fn();
       scope.$watch(scope => scope.aValue, listener, true);
@@ -172,7 +172,7 @@ describe('Scope', () => {
       expect(listener).toHaveBeenCalledTimes(2);
     });
 
-    it('correctly handles NaNs', () => {
+    it("correctly handles NaNs", () => {
       scope.number = 0 / 0;
       const listenerFn = jest.fn();
       scope.$watch(scope => scope.number, listenerFn);
@@ -190,17 +190,17 @@ describe('Scope', () => {
       expect(result).toBe(42);
     });
 
-    it('passes the second argument straight through', () => {
+    it("passes the second argument straight through", () => {
       scope.aValue = 55;
       const result = scope.$eval((scope, arg) => scope.aValue + arg, 6);
       expect(result).toBe(61);
     });
 
     it("executes $apply'ed function and starts the digest", () => {
-      scope.aValue = 'one';
+      scope.aValue = "one";
       const listenerFn = jest.fn();
       const applyFn = jest.fn(scope => {
-        scope.aValue = 'two';
+        scope.aValue = "two";
       });
       scope.$watch(scope => scope.aValue, listenerFn);
       scope.$digest();
@@ -220,7 +220,7 @@ describe('Scope', () => {
         (newVal, oldVal, scope) => {
           scope.$evalAsync(scope => (scope.asyncEvaluated = true));
           scope.asyncEvaluatedImmediately = scope.asyncEvaluated;
-        },
+        }
       );
       scope.$digest();
       expect(scope.asyncEvaluated).toBeTruthy();
@@ -240,7 +240,7 @@ describe('Scope', () => {
           }
           return scope.aValue;
         },
-        (newVal, oldVal, scope) => {},
+        (newVal, oldVal, scope) => {}
       );
 
       scope.$digest();
@@ -259,7 +259,7 @@ describe('Scope', () => {
           }
           return scope.aValue;
         },
-        (newVal, oldVal, scope) => {},
+        (newVal, oldVal, scope) => {}
       );
 
       scope.$digest();
@@ -267,7 +267,7 @@ describe('Scope', () => {
       expect(scope.asyncEvaluatedTimes).toBe(2);
     });
 
-    it('evantually halts $evalAsyncs added by watches', () => {
+    it("evantually halts $evalAsyncs added by watches", () => {
       scope.aValue = [1, 2, 3];
 
       scope.$watch(
@@ -275,7 +275,7 @@ describe('Scope', () => {
           scope.$evalAsync(() => {});
           return scope.aValue;
         },
-        (newVal, oldVal, scope) => {},
+        (newVal, oldVal, scope) => {}
       );
 
       expect(() => {
@@ -283,7 +283,7 @@ describe('Scope', () => {
       }).toThrow();
     });
 
-    it('has $$phase field whose values is the current digest phase', () => {
+    it("has $$phase field whose values is the current digest phase", () => {
       scope.aValue = [1, 2, 3];
       scope.phaseInWatchFunction = undefined;
       scope.phaseInListenerFunction = undefined;
@@ -296,27 +296,77 @@ describe('Scope', () => {
         },
         (newVal, oldVal, scope) => {
           scope.phaseInListenerFunction = scope.$$phase;
-        },
+        }
       );
 
       scope.$apply(scope => (scope.phaseInApplyFunction = scope.$$phase));
 
-      expect(scope.phaseInWatchFunction).toBe('$digest');
-      expect(scope.phaseInListenerFunction).toBe('$digest');
-      expect(scope.phaseInApplyFunction).toBe('$apply');
+      expect(scope.phaseInWatchFunction).toBe("$digest");
+      expect(scope.phaseInListenerFunction).toBe("$digest");
+      expect(scope.phaseInApplyFunction).toBe("$apply");
     });
 
-    // it('TODO schedules a digest in $evalAsync', () => {
-    //   // TODO
-    // });
+    it("schedules a digest in $evalAsync", done => {
+      scope.aValue = "some val";
+      scope.counter = 0;
 
-    // it('TODO allows async $apply with $applyAsync', () => {
-    //   // TODO
-    // });
+      scope.$watch(
+        scope => scope.aValue,
+        (n, o, scope) => scope.counter++
+      );
 
-    // it('TODO never executes $applyAsync\'ed functions in the same cycle', () => {
-    //   // TODO
-    // });
+      scope.$evalAsync(() => {});
+
+      expect(scope.counter).toBe(0);
+      setTimeout(() => {
+        expect(scope.counter).toBe(1);
+        done();
+      }, 50);
+    });
+
+    it("TODO allows async $apply with $applyAsync", done => {
+      scope.aValue = "abc";
+      scope.counter = 0;
+
+      scope.$watch(
+        scope => scope.aValue,
+        (n, o, scope) => scope.counter++
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(1);
+
+      scope.$applyAsync(() => {
+        scope.aValue = "another";
+      });
+
+      expect(scope.counter).toBe(1);
+
+      setTimeout(() => {
+        expect(scope.counter).toBe(2);
+        done();
+      }, 50);
+    });
+
+    it("TODO never executes $applyAsync'ed functions in the same cycle", done => {
+      scope.aValue = [1, 2, 3];
+      scope.asyncApplied = false;
+
+      scope.$watch(
+        scope => scope.aValue,
+        (n, o, scope) => {
+          scope => (scope.asyncApplied = true);
+        }
+      );
+
+      scope.$digest();
+      expect(scope.asyncApplied).toBeFalsy();
+
+      setTimeout(() => {
+        expect(scope.asyncApplied).toBeTruthy();
+        done();
+      }, 50);
+    });
 
     // it('TODO coalesces many calls to $applyAsync', () => {
     //   // TODO
