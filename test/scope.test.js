@@ -348,25 +348,25 @@ describe("Scope", () => {
       }, 50);
     });
 
-    it("TODO never executes $applyAsync'ed functions in the same cycle", done => {
-      scope.aValue = [1, 2, 3];
-      scope.asyncApplied = false;
+    // it("TODO never executes $applyAsync'ed functions in the same cycle", done => {
+    //   scope.aValue = [1, 2, 3];
+    //   scope.asyncApplied = false;
 
-      scope.$watch(
-        scope => scope.aValue,
-        (n, o, scope) => {
-          scope => (scope.asyncApplied = true);
-        }
-      );
+    //   scope.$watch(
+    //     scope => scope.aValue,
+    //     (n, o, scope) => {
+    //       scope => (scope.asyncApplied = true);
+    //     }
+    //   );
 
-      scope.$digest();
-      expect(scope.asyncApplied).toBeFalsy();
+    //   scope.$digest();
+    //   expect(scope.asyncApplied).toBeFalsy();
 
-      setTimeout(() => {
-        expect(scope.asyncApplied).toBeTruthy();
-        done();
-      }, 50);
-    });
+    //   setTimeout(() => {
+    //     expect(scope.asyncApplied).toBeTruthy();
+    //     done();
+    //   }, 50);
+    // });
 
     // it('TODO coalesces many calls to $applyAsync', () => {
     //   // TODO
@@ -427,5 +427,155 @@ describe("Scope", () => {
     // it('TODO only calls listener once per digest', () => {
     //   // TODO
     // });
+  });
+});
+
+describe("inheritance", () => {
+  it("inherits the parent' properties", () => {
+    const parent = new Scope();
+    parent.aValue = [1, 2, 3];
+    const child = parent.$new();
+    expect(child.aValue).toEqual([1, 2, 3]);
+  });
+
+  it("does not cause a parent to inherit its properties", () => {
+    const parent = new Scope();
+    const child = parent.$new();
+    child.aValue = [1, 2, 3];
+    expect(parent.aValue).toBeUndefined();
+  });
+
+  it("inherits the parent's properties whenever they are defined", () => {
+    const parent = new Scope();
+    const child = parent.$new();
+    parent.aValue = [1, 2, 3];
+    expect(child.aValue).toEqual([1, 2, 3]);
+  });
+
+  it("can manipulate a parent scope's property", () => {
+    const parent = new Scope();
+    const child = parent.$new();
+    parent.aValue = [1, 2, 3];
+
+    child.aValue.push(4);
+
+    expect(child.aValue).toEqual([1, 2, 3, 4]);
+    expect(parent.aValue).toEqual([1, 2, 3, 4]);
+  });
+
+  it("can watch a property in the parent", () => {
+    const parent = new Scope();
+    const child = parent.$new();
+    parent.aValue = [1, 2, 3];
+    child.counter = 0;
+
+    child.$watch(
+      scope => scope.aValue,
+      (newVal, oldVal, scope) => {
+        scope.counter++;
+      },
+      true
+    );
+
+    child.$digest();
+    expect(child.counter).toBe(1);
+
+    parent.aValue.push(4);
+    child.$digest();
+    expect(child.counter).toBe(2);
+  });
+
+  it('can be nested for any depth', () => {
+    const a = new Scope();
+    const aa = a.$new();
+    const aaa = aa.$new();
+    const aab = aa.$new();
+    const ab = a.$new();
+    const abb = ab.$new();
+
+    a.value = 1;
+
+    expect(aa.value).toBe(1);
+    expect(aaa.value).toBe(1);
+    expect(aab.value).toBe(1);
+    expect(ab.value).toBe(1);
+    expect(abb.value).toBe(1);
+
+    ab.anotherValue = 2;
+
+    expect(abb.anotherValue).toBe(2);
+    expect(aa.anotherValue).toBeUndefined();
+    expect(aaa.anotherValue).toBeUndefined();
+  });
+
+  it('shadows a parent\'s property with the same name', () => {
+    const parent = new Scope();
+    const child = parent.$new();
+
+    parent.name = 'Parent';
+    child.name = 'Child';
+
+    expect(parent.name).toBe('Parent');
+    expect(child.name).toBe('Child');
+  });
+
+  it('does not shadow member of parent scope\'s attributes', () => {
+    const parent = new Scope();
+    const child = parent.$new();
+
+    parent.user = {name: 'Parent'};
+    child.user.name = 'Child';
+
+    expect(parent.user.name).toBe('Child');
+    expect(child.user.name).toBe('Child');
+  });
+  
+  it('does not digest its parent(s)', () => {
+    const parent = new Scope();
+    const child = parent.$new();
+
+    parent.aValue = 'abc';
+    parent.$watch(
+      scope => scope.aValue,
+      (newVal, oldVal, scope) => {
+        scope.aValueWas = newValue;
+      }
+    )
+    child.$digest();
+    expect(child.aValueWas).toBeUndefined();
+  });
+
+  it('keeps a record of its children', () => {
+    const parent = new Scope();
+    const child1 = parent.$new();
+    const child2 = parent.$new();
+    const child2_1 = child2.$new();
+
+    expect(parent.$$children.length).toBe(2);
+    expect(parent.$$children[0]).toBe(child1);
+    expect(parent.$$children[1]).toBe(child2);
+    
+    expect(child1.$$children.length).toBe(0);
+
+    expect(child2.$$children.length).toBe(1);
+    expect(child2.$$children[0]).toBe(child2_1);
+  });
+  
+  
+  it('digests its children', () => {
+    const parent = new Scope();
+    const child = parent.$new();
+
+    parent.aValue = 'abc';
+
+    child.$watch(
+      scope => scope.aValue,
+      (newVal, oldVal, scope) => {
+        scope.aValueWas = newVal;
+      }
+    );
+
+    parent.$digest();
+    expect(child.aValueWas).toBe('abc');
   });
 });
